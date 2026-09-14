@@ -1,0 +1,164 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hotel-chatbot",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -320,
+        80
+      ],
+      "id": "ac2717d4-8229-4159-804d-7d7efca85c0b",
+      "name": "Webhook",
+      "webhookId": "bbbf4ab9-9043-42b7-a530-8e2c82b5ab7d"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=User Message: {{ $json.message }}\n\nContext Data:\n{{ $json.summary }}",
+        "options": {
+          "systemMessage": "You are a smart, concise, and friendly hotel concierge assistant. \nRead the Data provided below to answer questions about the user's specific bookings.\n\nData:\n{{ $json.summary }}\n\nSTRICT RULES:\n1. Answer ONLY what the user asked. Do not provide extra metrics unless asked.\n2. NEVER explain your reasoning, logic, or mention \"context\", \"data\", or \"provided information\".\n3. NEVER use markdown formatting (no bold **, no bullet points, no tables).\n4. If asked about \"total spending\", just say the total (e.g., \"Your total spending is $750.\").\n5. If asked about \"largest booking\", just say the hotel name and price.\n6. If asked about \"category breakdown\", just list the categories and amounts.\n7. If asked for \"booking details\", formulate a natural, polite sentence using the data.\n8. Detect the user's language (Arabic/English) and reply in the same language.\n9. If the user says \"hello\", reply with a greeting and do NOT mention any numbers.\n10. If the user asks for GENERAL information about a hotel (e.g., \"info about Four Seasons\", \"location\", \"amenities\"), use your own general knowledge to provide a brief, nice description of that hotel chain (e.g., \"Four Seasons is a luxury chain known for excellent service and spas...\"). Do NOT say you don't know. Do NOT mix this general info with the user's specific booking price unless asked."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        64
+      ],
+      "id": "607dd190-72ed-4c3a-83bc-e7da4f8ea19f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "=groq/compound",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        48,
+        336
+      ],
+      "id": "b4a3008e-5889-47dc-a76a-7eafe11de64d",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "BdMyxVJ2LshNEkO4",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8e472414-6f35-45e1-aa85-0d74392401d5",
+              "name": "reply",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        496,
+        192
+      ],
+      "id": "c2949ab3-947b-4303-823d-25023dcaa85e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const expenses = $json.body.expenses || [];\nconst message = $json.body.message || \"No message\";\n\nlet summary = \"Data:\\n\";\nlet totalSpent = 0;\nlet largestBooking = null;\nlet byCategory = {};\n\nif (expenses.length > 0) {\n  expenses.forEach((item, index) => {\n    const price = Number(item.price) || 0;\n    totalSpent += price;\n    if (!largestBooking || price > Number(largestBooking.price)) largestBooking = item;\n    \n    const type = item.roomType || 'Unknown';\n    if (!byCategory[type]) byCategory[type] = 0;\n    byCategory[type] += price;\n\n    // تم إضافة Guest: ${item.guestName} فقط لهذا السطر\n    summary += `${index + 1}. Guest: ${item.guestName}, Hotel: ${item.hotelName}, Type: ${type}, Price: $${price}, Dates: ${item.checkIn} to ${item.checkOut}.\\n`;\n  });\n\n  let categoryString = Object.entries(byCategory).map(([key, val]) => `${key}: $${val}`).join(', ');\n  \n  summary += `\\nTotal Spending: $${totalSpent}`;\n  summary += `\\nLargest Booking: ${largestBooking.hotelName} ($${largestBooking.price})`;\n  summary += `\\nSpending by Category: ${categoryString}`;\n} else {\n  summary += \"No bookings found.\";\n}\n\nreturn { json: { message: message, summary: summary } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        32
+      ],
+      "id": "583fdf38-e4f4-4730-a6e0-da7630060d48",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "e6ce91d3-39ba-4ba6-90a3-0974153e5935",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "51aa13537d94588ffde50d955daf77889fe16a1984c20d835eac1ffbfbfaa588"
+  },
+  "nodeGroups": [],
+  "id": "QedDZyuMqQwkBhBt",
+  "tags": []
+}

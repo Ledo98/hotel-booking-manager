@@ -1,0 +1,7 @@
+.table td, .table th {
+  vertical-align: middle;
+}
+
+tr {
+  transition: background-color 0.3s ease, border-left 0.3s ease;
+}

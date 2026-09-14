@@ -1,0 +1,41 @@
+<div class="container mt-4 mb-5">
+  <h2 class="mb-4"><i class="bi bi-speedometer2"></i> My Dashboard</h2>
+  
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card text-white bg-primary shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <i class="bi bi-calendar-check-fill display-5 me-3"></i>
+          <div>
+            <h6 class="card-subtitle mb-1">Total Bookings</h6>
+            <h2 class="card-title mb-0">{{ totalBookings() }}</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card text-white bg-info shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <i class="bi bi-moon-stars-fill display-5 me-3"></i>
+          <div>
+            <h6 class="card-subtitle mb-1">Total Nights Booked</h6>
+            <h2 class="card-title mb-0">{{ totalNights() }}</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card text-white bg-success shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <i class="bi bi-cash-stack display-5 me-3"></i>
+          <div>
+            <h6 class="card-subtitle mb-1">Total Spent</h6>
+            <h2 class="card-title mb-0">{{ totalSpent() | currency }}</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

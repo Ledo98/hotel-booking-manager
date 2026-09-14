@@ -1,0 +1,102 @@
+<div class="card shadow-sm">
+  <div class="card-header bg-white pt-3 pb-0">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">My Bookings</h5>
+      <h5 class="text-success mb-0">
+        Total: {{ runningTotal() | currency }}
+      </h5>
+    </div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-md-4">
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="Search by hotel or guest..." 
+          [ngModel]="search()" 
+          (ngModelChange)="search.set($event)"
+        >
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" [ngModel]="roomFilter()" (ngModelChange)="roomFilter.set($event)">
+          @for (type of roomTypes; track type) {
+            <option [value]="type">{{ type === 'All' ? 'All Rooms' : type }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event)">
+          <option value="checkIn">Sort by Date</option>
+          <option value="price">Sort by Price</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-outline-secondary w-100" (click)="toggleSortDir()">
+          <i class="bi" [class.bi-sort-up]="sortDir() === 'asc'" [class.bi-sort-down]="sortDir() === 'desc'"></i>
+          {{ sortDir() === 'asc' ? 'Asc' : 'Desc' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body">
+    @if (filteredBookings().length === 0) {
+      <div class="alert alert-info text-center mb-0">
+        No bookings found matching your criteria.
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Hotel Details</th>
+              <th>Guest</th>
+              <th>Room</th>
+              <th>Check-in</th>
+              <th>Check-out</th>
+              <th>Price</th>
+              <th>Notes</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (b of filteredBookings(); track b.id) {
+              <tr [appHighlightPremium]="b.price" [threshold]="300">
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <img [src]="b.imageUrl" [alt]="b.hotelName" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                    <div>
+                      <div class="fw-bold">{{ b.hotelName }}</div>
+                      <small class="text-warning">
+                        @for (i of [1,2,3,4,5]; track i) {
+                          <i class="bi" [class.bi-star-fill]="i <= b.stars" [class.bi-star]="i > b.stars"></i>
+                        }
+                      </small>
+                    </div>
+                  </div>
+                </td>
+                <td class="fw-bold">{{ b.guestName }}</td>
+                <td>{{ b.roomType | roomTypeIcon }}</td>
+                <td>{{ b.checkIn | date:'mediumDate' }}</td>
+                <td>{{ b.checkOut | date:'mediumDate' }}</td>
+                <td class="fw-bold text-success">{{ b.price | currency }}</td>
+                <td class="text-muted small">
+                  @if (b.notes) { {{ b.notes }} } 
+                  @else { <span class="text-muted">-</span> }
+                </td>
+                <td class="text-end">
+                  <button class="btn btn-sm btn-outline-primary me-1" (click)="edit.emit(b)">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="delete.emit(b.id)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,149 @@
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-primary text-white">
+    <h5 class="mb-0">{{ isEditing ? 'Update Booking' : 'Book a Hotel' }}</h5>
+  </div>
+  <div class="card-body">
+    <form [formGroup]="form">
+      
+      <div class="mb-3">
+        <label class="form-label">Booking As (Guest Name)</label>
+        <input type="text" class="form-control bg-light text-muted" formControlName="guestName" readonly>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Filter Hotels by Stars</label>
+        <select class="form-select" formControlName="stars">
+          @for (star of hotelStars; track star) {
+            <option [value]="star">{{ star }} Stars</option>
+          }
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Select a Hotel</label>
+        <div class="d-flex gap-2 overflow-auto pb-2">
+          @for (hotel of availableHotels(); track hotel.id) {
+            <div 
+              class="card hotel-card" 
+              [class.border-primary]="selectedHotelName() === hotel.name"
+              [class.bg-primary-subtle]="selectedHotelName() === hotel.name"
+              style="min-width: 140px; cursor: pointer;"
+              (click)="selectHotel(hotel)"
+            >
+              <img [src]="hotel.imageUrl" class="card-img-top" [alt]="hotel.name" style="height: 80px; object-fit: cover;">
+              <div class="card-body p-2 text-center">
+                <small class="fw-bold d-block text-truncate">{{ hotel.name }}</small>
+                <small class="text-success">{{ hotel.price }}$ / night</small>
+              </div>
+            </div>
+          } @empty {
+            <p class="text-muted small">No hotels available for this category.</p>
+          }
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="mb-3 col-md-7">
+          <label class="form-label">Room Type (Max: {{ maxGuests() }})</label>
+          <select class="form-select" formControlName="roomType">
+            @for (type of roomTypes; track type) {
+              <option [value]="type">{{ type }}</option>
+            }
+          </select>
+        </div>
+        <div class="mb-3 col-md-5">
+          <label class="form-label">Number of Guests</label>
+          <input type="number" class="form-control" formControlName="guests" min="1" [max]="maxGuests()">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="mb-3 col-md-6">
+          <label class="form-label">Check-in Date</label>
+          <input type="date" class="form-control" formControlName="checkIn" [min]="todayDate">
+        </div>
+        <div class="mb-3 col-md-6">
+          <label class="form-label">Check-out Date</label>
+          <input type="date" class="form-control" formControlName="checkOut" [min]="todayDate">
+        </div>
+      </div>
+
+      @if (form.errors?.['invalidDateRange']) {
+        <div class="alert alert-danger py-2">Check-out date must be after check-in date.</div>
+      }
+
+      <div class="mb-3">
+        <label class="form-label">Notes (Optional)</label>
+        <input type="text" class="form-control" formControlName="notes">
+      </div>
+
+      @if (finalPrice() > 0) {
+        <div class="alert alert-info d-flex justify-content-between align-items-center">
+          <span>Total for {{ nights() }} night(s):</span>
+          <strong class="fs-5">{{ finalPrice() }}$</strong>
+        </div>
+      }
+
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-success w-100" [disabled]="form.invalid" (click)="proceedToCheckout()">
+          {{ isEditing ? 'Update Booking' : 'Proceed to Checkout' }}
+        </button>
+        @if (isEditing) {
+          <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+        }
+      </div>
+
+    </form>
+  </div>
+</div>
+
+@if (showCheckout()) {
+  <div class="checkout-overlay">
+    <div class="checkout-modal card shadow-lg">
+      @if (!paymentSuccess()) {
+        <div class="card-header bg-dark text-white">
+          <h5 class="mb-0">Checkout & Payment</h5>
+        </div>
+        <div class="card-body">
+          <h6 class="mb-3">Summary:</h6>
+          <ul class="list-group mb-3">
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Hotel:</span>
+              <strong>{{ form.get('hotelName')?.value }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Guests:</span>
+              <strong>{{ form.get('guests')?.value }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Duration:</span>
+              <strong>{{ nights() }} night(s)</strong>
+            </li>
+          </ul>
+          
+          <div class="alert alert-success text-center">
+            <h4 class="mb-0">Total Amount: {{ finalPrice() }}$</h4>
+          </div>
+
+          <h6 class="mt-3">Payment Details (Dummy):</h6>
+          <input type="text" class="form-control mb-2" placeholder="Card Number" value="4242 4242 4242 4242" readonly>
+          <div class="row">
+            <div class="col-6"><input type="text" class="form-control mb-3" placeholder="MM/YY" value="12/25" readonly></div>
+            <div class="col-6"><input type="text" class="form-control mb-3" placeholder="CVC" value="123" readonly></div>
+          </div>
+
+          <button class="btn btn-primary w-100 mb-2" (click)="confirmPayment()">
+            <i class="bi bi-credit-card"></i> Pay {{ finalPrice() }}$           </button>
+          <button class="btn btn-outline-secondary w-100" (click)="closeCheckout()">Cancel</button>
+        </div>
+      } @else {
+        <div class="card-body text-center p-5">
+          <i class="bi bi-check-circle-fill text-success display-1"></i>
+          <h3 class="mt-3 text-success">Payment Successful!</h3>
+          <p class="text-muted">Confirming your booking...</p>
+          <div class="spinner-border text-primary mt-2" role="status"></div>
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,55 @@
+<nav class="navbar navbar-expand-lg bg-body-tertiary mb-4 shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" routerLink="/">
+      <i class="bi bi-building-fill text-primary"></i> Hotel Manager
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
+        </li>
+        
+        @if (auth.currentUser()) {
+          <li class="nav-item ms-3">
+            <span class="navbar-text text-success fw-bold">
+              <i class="bi bi-person-circle"></i> {{ auth.currentUser() }}
+            </span>
+          </li>
+        }
+
+        <li class="nav-item ms-3">
+          <button  class="btn" 
+                [class.btn-outline-dark]="!isDarkMode" 
+                [class.btn-outline-light]="isDarkMode"
+                (click)="toggleDarkMode.emit()">
+            @if (isDarkMode) {
+              <i class="bi bi-sun-fill"></i> Light Mode
+            } @else {
+              <i class="bi bi-moon-stars-fill"></i> Dark Mode
+            }
+          </button>
+        </li>
+        
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/contact" routerLinkActive="active">Contact Us</a>
+        </li>
+         
+        
+        
+        @if (auth.currentUser()) {
+          <li class="nav-item ms-2">
+            <button class="btn btn-outline-danger" (click)="logout()">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+</nav>
